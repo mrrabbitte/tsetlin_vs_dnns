@@ -1,6 +1,6 @@
 import json
 
-from datasets.datasets import load_mnist
+from datasets.datasets import load_mnist, load_hvr
 from training import hvr, mnist, sonar, wine
 import numpy as np
 
@@ -22,7 +22,7 @@ def train_test_split(x, y, p_train=0.8):
 
 
 def log(dataset, model, acc, took):
-    logline = {"dataset": dataset, "model": model, "acc": acc, "took [ms]": took * 100}
+    logline = {"dataset": dataset, "model": model, "acc": acc, "took [s]": took}
 
     print(json.dumps(logline))
 
@@ -31,10 +31,11 @@ if __name__ == "__main__":
     num_bootstrap = 1
 
     x_mnist, y_mnist = load_mnist()
+    x_hvr, y_hvr = load_hvr("/home/mrrabbit/Data/datasets/hvr/house-votes-84.data")
 
     experiments = {
-        "MNIST": (x_mnist, y_mnist, mnist.run_tsetlin, mnist.run_dnn),
-        "HVR": (x_mnist, y_mnist, hvr.run_tsetlin, hvr.run_dnn),
+        #"MNIST": (x_mnist, y_mnist, mnist.run_tsetlin, mnist.run_dnn),
+        "HVR": (x_hvr, y_hvr, hvr.run_tsetlin, hvr.run_dnn),
         "SONAR": (x_mnist, y_mnist, sonar.run_tsetlin, sonar.run_dnn),
         "WINE": (x_mnist, y_mnist, wine.run_tsetlin, wine.run_dnn)
     }

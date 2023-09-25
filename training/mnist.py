@@ -58,7 +58,7 @@ def run_dnn(x_train, y_train, x_test, y_test):
                   metrics=['accuracy'])
 
     start_training = time()
-    model.fit(x_train, y_train, epochs=20, batch_size=batch_size)
+    model.fit(x_train, y_train, epochs=20, batch_size=batch_size, verbose=0)
     stop_training = time()
 
     _, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
