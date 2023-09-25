@@ -44,9 +44,9 @@ def run_dnn(x_train, y_train, x_test, y_test):
     y_test = to_categorical(y_test)
 
     # network parameters
-    batch_size = 128
-    hidden_units = 17
-    dropout = 0.45
+    batch_size = 50
+    hidden_units = 72
+    dropout = 0.3
 
     model = Sequential()
     model.add(Dense(hidden_units, input_dim=x_train.shape[1]))
