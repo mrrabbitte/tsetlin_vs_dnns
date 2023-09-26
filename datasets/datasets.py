@@ -19,6 +19,8 @@ def load_hvr(hvr_path):
     x = arr[:, 1:]
     y = arr[:, 0]
 
+    print("HVR:", x.shape, y.shape)
+
     return x, y
 
 
@@ -26,7 +28,9 @@ def load_sonar(sonar_path):
     arr = pd.read_csv(sonar_path).to_numpy()
 
     x = arr[:, :60]
-    y = arr[:, 60:]
+    y = arr[:, 60]
+
+    print("SONAR:", x.shape, y.shape)
 
     return x, y
 
@@ -36,6 +40,8 @@ def load_bc(bc_path):
 
     x = arr[:, 2:]
     y = arr[:, 1]
+
+    print("BC:", x.shape, y.shape)
 
     return x, y
 

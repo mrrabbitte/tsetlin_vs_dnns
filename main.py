@@ -37,7 +37,7 @@ if __name__ == "__main__":
         "WINE": (load_mnist, wine.run_tsetlin, wine.run_dnn)
     }
 
-    run_for = ["MNIST", "HVR", "BC"]
+    run_for = ["MNIST", "HVR", "BC", "SONAR"]
 
     num_bootstrap = 1
 
