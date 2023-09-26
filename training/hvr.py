@@ -15,9 +15,6 @@ def run_tsetlin(x_train, y_train, x_test, y_test):
     y_train = __preprocess_y(y_train)
     y_test = __preprocess_y(y_test)
 
-    print(x_train[0])
-    print(y_train[0])
-
     tm = MultiClassTsetlinMachine(100, 10.0, 2.0)
 
     start_training = time()
@@ -63,7 +60,7 @@ def run_dnn(x_train, y_train, x_test, y_test):
                   metrics=['accuracy'])
 
     start_training = time()
-    model.fit(x_train, y_train, epochs=20, batch_size=batch_size, verbose=0)
+    model.fit(x_train, y_train, epochs=120, batch_size=batch_size, verbose=0)
     stop_training = time()
 
     _, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
