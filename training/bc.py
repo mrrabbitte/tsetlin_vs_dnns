@@ -11,10 +11,10 @@ from keras.utils import to_categorical
 def run_tsetlin(x_train, y_train, x_test, y_test):
     y_train, y_test = __preprocess_y(y_train), __preprocess_y(y_test)
 
-    tm = MultiClassTsetlinMachine(200, 1.0, 15.0)
+    tm = MultiClassTsetlinMachine(250, 10, 1)
 
     start_training = time()
-    tm.fit(x_train, y_train, epochs=10, incremental=True)
+    tm.fit(x_train, y_train, epochs=50, incremental=True)
     stop_training = time()
 
     acc = 100 * (tm.predict(x_test) == y_test).mean()
