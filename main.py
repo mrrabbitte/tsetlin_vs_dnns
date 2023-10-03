@@ -1,7 +1,7 @@
 import json
 
 from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar
-from training import hvr, mnist, sonar, wine, bc
+from training import hvr, mnist, sonar, bc
 import numpy as np
 
 
@@ -28,19 +28,19 @@ def log(dataset, model, acc, took):
 
 
 if __name__ == "__main__":
+    # Specification
     experiments = {
         "MNIST": (load_mnist, mnist.run_tsetlin, mnist.run_dnn),
-        "HVR": (lambda: load_hvr("/home/mrrabbit/Data/datasets/hvr/house-votes-84.data"), hvr.run_tsetlin, hvr.run_dnn),
-        "BC": (lambda: load_bc("/home/mrrabbit/Data/datasets/bc/wdbc.data"), bc.run_tsetlin, bc.run_dnn),
-        "SONAR": (lambda: load_sonar("/home/mrrabbit/Data/datasets/sonar/sonar_csv.csv"),
-                  sonar.run_tsetlin, sonar.run_dnn),
-        "WINE": (load_mnist, wine.run_tsetlin, wine.run_dnn)
+        "HVR": (load_hvr, hvr.run_tsetlin, hvr.run_dnn),
+        "BC": (load_bc, bc.run_tsetlin, bc.run_dnn),
+        "SONAR": (load_sonar, sonar.run_tsetlin, sonar.run_dnn),
     }
 
-    run_for = ["MNIST", "HVR", "BC", "SONAR"]
-
+    # Config
+    run_for = ["HVR", "BC", "SONAR"]
     num_bootstrap = 1
 
+    # Execution
     for (dataset_name, experiment) in experiments.items():
         if dataset_name not in run_for:
             continue

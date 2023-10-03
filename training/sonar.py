@@ -10,9 +10,6 @@ from keras.utils import to_categorical
 def run_tsetlin(x_train, y_train, x_test, y_test):
     y_train, y_test = __preprocess_y(y_train), __preprocess_y(y_test)
 
-    print(y_train[0])
-    print(x_train[0])
-
     tm = MultiClassTsetlinMachine(200, 1.0, 15.0)
 
     start_training = time()
