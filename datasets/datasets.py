@@ -69,3 +69,26 @@ def load_bc():
     y = arr[:, 1]
 
     return x, y
+
+
+# @misc{misc_tuandromd_(tezpur_university_android_malware_dataset)_855,
+#   author       = {Borah,Parthajit and Bhattacharyya,Dhruba K.},
+#   title        = {{TUANDROMD (Tezpur University Android Malware Dataset)}},
+#   year         = {2023},
+#   howpublished = {UCI Machine Learning Repository},
+#   note         = {{DOI}: https://doi.org/10.24432/C5560H}
+# }
+def load_tuandromd():
+    arr = pd.read_csv(resource_stream("datasets.data.tuandromd", "TUANDROMD.csv")).to_numpy()
+
+    print(np.argwhere(pd.isnull(arr)))
+
+    print(np.shape(arr))
+
+    x = arr[:, :241]
+    y = arr[:, 241]
+
+    print(np.shape(x), np.shape(y))
+    print(x[0, :], y[0])
+
+    return x, y

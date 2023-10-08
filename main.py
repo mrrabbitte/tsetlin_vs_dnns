@@ -1,7 +1,7 @@
 import json
 
-from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar
-from training import hvr, mnist, sonar, bc
+from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd
+from training import hvr, mnist, sonar, bc, tuandromd
 import numpy as np
 
 
@@ -34,10 +34,11 @@ if __name__ == "__main__":
         "HVR": (load_hvr, hvr.run_tsetlin, hvr.run_dnn),
         "BC": (load_bc, bc.run_tsetlin, bc.run_dnn),
         "SONAR": (load_sonar, sonar.run_tsetlin, sonar.run_dnn),
+        "TUANDROMD": (load_tuandromd, tuandromd.run_tsetlin, tuandromd.run_dnn)
     }
 
     # Config
-    run_for = ["HVR", "BC", "SONAR"]
+    run_for = ["TUANDROMD"]
     num_bootstrap = 1
 
     # Execution
