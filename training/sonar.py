@@ -6,13 +6,20 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
 from keras.utils import to_categorical
 
+from sklearn.preprocessing import KBinsDiscretizer
+
 
 def run_tsetlin(x_train, y_train, x_test, y_test):
     y_train, y_test = __preprocess_y(y_train), __preprocess_y(y_test)
 
+    start_training = time()
+    discretizer = KBinsDiscretizer(encode="onehot", strategy="quantile", n_bins=2)
+    discretizer.fit(x_train)
+
+    x_train, x_test = discretizer.transform(x_train).toarray(), discretizer.transform(x_test).toarray()
+
     tm = MultiClassTsetlinMachine(200, 1.0, 15.0)
 
-    start_training = time()
     tm.fit(x_train, y_train, epochs=10, incremental=True)
     stop_training = time()
 

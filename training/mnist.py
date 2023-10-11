@@ -23,6 +23,10 @@ def run_tsetlin(x_train, y_train, x_test, y_test):
 
 
 def run_dnn(x_train, y_train, x_test, y_test):
+    # Binarize the data as well
+    # x_train = np.where(x_train > 75, 1, 0)
+    # x_test = np.where(x_test > 75, 1, 0)
+
     # compute the number of labels
     num_labels = len(np.unique(y_train))
 

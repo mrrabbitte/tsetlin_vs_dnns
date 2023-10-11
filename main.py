@@ -5,11 +5,11 @@ from training import hvr, mnist, sonar, bc, tuandromd
 import numpy as np
 
 
-def train_test_split(x, y, p_train=0.8):
-    assert x.shape[0] == y.shape[0]
+def train_test_split(X, y, p_train=0.8):
+    assert X.shape[0] == y.shape[0]
 
-    num_train = int(p_train * x.shape[0])
-    num_examples = x.shape[0]
+    num_train = int(p_train * X.shape[0])
+    num_examples = X.shape[0]
 
     train_indices = np.random.choice(range(num_examples), size=(num_train,), replace=False)
     test_indices = np.array(list(set(range(num_examples)) - set(train_indices)))
@@ -18,7 +18,7 @@ def train_test_split(x, y, p_train=0.8):
     assert len(set(train_indices).intersection(set(test_indices))) == 0
     assert len(set(train_indices).union(set(test_indices))) == num_examples
 
-    return x[train_indices], y[train_indices], x[test_indices], y[test_indices]
+    return X[train_indices], y[train_indices], X[test_indices], y[test_indices]
 
 
 def log(dataset, model, acc, took):
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     }
 
     # Config
-    run_for = ["TUANDROMD"]
+    run_for = ["BC"]
     num_bootstrap = 1
 
     # Execution
