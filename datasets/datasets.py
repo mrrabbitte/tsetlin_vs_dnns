@@ -81,14 +81,34 @@ def load_bc():
 def load_tuandromd():
     arr = pd.read_csv(resource_stream("datasets.data.tuandromd", "TUANDROMD.csv")).to_numpy()
 
-    print(np.argwhere(pd.isnull(arr)))
-
-    print(np.shape(arr))
-
     x = arr[:, :241]
     y = arr[:, 241]
 
-    print(np.shape(x), np.shape(y))
-    print(x[0, :], y[0])
+    return x, y
+
+
+# @misc{misc_adult_2,
+#   author       = {Becker,Barry and Kohavi,Ronny},
+#   title        = {{Adult}},
+#   year         = {1996},
+#   howpublished = {UCI Machine Learning Repository},
+#   note         = {{DOI}: https://doi.org/10.24432/C5XW20}
+# }
+def load_census():
+    data = pd.read_csv(resource_stream("datasets.data.census", "adult.data"))
+    test = pd.read_csv(resource_stream("datasets.data.census", "adult.test"))
+
+    data = strip_strings(data).to_numpy()
+    test = strip_strings(test).to_numpy()
+
+    x = np.concatenate((data[:, :14], test[:, :14]))
+    y = np.concatenate((data[:, 14], test[:, 14]))
 
     return x, y
+
+
+# This is to sanitize the data and get rid of trivial bugs downstream.
+def strip_strings(df):
+    strings = df.select_dtypes(['object'])
+    df[strings.columns] = strings.apply(lambda x: x.str.strip())
+    return df
