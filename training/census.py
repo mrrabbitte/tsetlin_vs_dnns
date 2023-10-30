@@ -99,8 +99,8 @@ def __preprocess_x(x):
 
     numerics = x[:, NUMERIC_COLUMNS]
     discretizer = KBinsDiscretizer(encode="onehot",
-                                   strategy="quantile",
-                                   n_bins=5)
+                                   strategy="uniform",
+                                   n_bins=3)
     discretizer.fit(numerics)
 
     numerics_discretized = discretizer.transform(numerics)
