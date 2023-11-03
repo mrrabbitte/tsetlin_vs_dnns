@@ -7,6 +7,16 @@ from keras.layers import Dense, Activation, Dropout
 from keras.utils import to_categorical
 
 
+def preprocess_tsetlin(x, y):
+    return np.where(x.reshape((x.shape[0], 28 * 28)) > 75, 1, 0), y
+
+
+def train_tsetlin(x_train, y_train):
+    tm = MultiClassTsetlinMachine(100, 10.0, 2.0)
+    tm.fit(x_train, y_train, epochs=10, incremental=True)
+    return lambda x_test: tm.predict(x_test)
+
+
 def run_tsetlin(x_train, y_train, x_test, y_test):
     x_train = np.where(x_train.reshape((x_train.shape[0], 28 * 28)) > 75, 1, 0)
     x_test = np.where(x_test.reshape((x_test.shape[0], 28 * 28)) > 75, 1, 0)
@@ -20,6 +30,42 @@ def run_tsetlin(x_train, y_train, x_test, y_test):
     acc = 100 * (tm.predict(x_test) == y_test).mean()
 
     return acc, stop_training - start_training
+
+
+def preprocess_dnn(x, y):
+    image_size = x.shape[1]
+    input_size = image_size * image_size
+
+    x = np.reshape(x, [-1, input_size])
+    x = x.astype('float32') / 255
+
+    return x,  to_categorical(y)
+
+
+def train_dnn(x_train, y_train):
+    num_labels = 10
+
+    batch_size = 128
+    hidden_units = 256
+    dropout = 0.45
+
+    model = Sequential()
+    model.add(Dense(hidden_units, input_dim=x_train.shape[1]))
+    model.add(Activation('relu'))
+    model.add(Dropout(dropout))
+    model.add(Dense(hidden_units))
+    model.add(Activation('relu'))
+    model.add(Dropout(dropout))
+    model.add(Dense(num_labels))
+    model.add(Activation('softmax'))
+
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+
+    model.fit(x_train, y_train, epochs=20, batch_size=batch_size, verbose=0)
+
+    return lambda x_test: model.predict(x_test, batch_size=batch_size)
 
 
 def run_dnn(x_train, y_train, x_test, y_test):

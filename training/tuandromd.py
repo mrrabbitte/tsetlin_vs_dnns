@@ -25,6 +25,7 @@ def preprocess_dnn(x, y):
 
 
 def train_dnn(x_train, y_train):
+    num_labels = len(np.unique(y_train))
 
     batch_size = 20
     hidden_units = 200
@@ -37,7 +38,7 @@ def train_dnn(x_train, y_train):
     model.add(Dense(hidden_units))
     model.add(Activation('relu'))
     model.add(Dropout(dropout))
-    model.add(Dense(len(np.unique(y_train))))
+    model.add(Dense(num_labels))
     model.add(Activation('softmax'))
 
     model.compile(loss='categorical_crossentropy',

@@ -91,7 +91,7 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
     if model_name == "dnn":
         y_test, y_pred = one_hot_to_classes(y_test), one_hot_to_classes(y_pred)
 
-    f1_scores = f1_score(y_test, y_pred)
+    f1_scores = f1_score(y_test, y_pred, average=None)
     acc = accuracy_score(y_test, y_pred)
 
     return ExperimentResult(
@@ -106,7 +106,8 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
 def main():
     # Specification
     experiments = {
-        "MNIST": (load_mnist, mnist.run_tsetlin, mnist.run_dnn),
+        "MNIST": (load_mnist, mnist.preprocess_tsetlin, mnist.train_tsetlin,
+                      mnist.preprocess_dnn, mnist.train_dnn),
         "HVR": (load_hvr, hvr.preprocess_tsetlin, hvr.train_tsetlin, hvr.preprocess_dnn, hvr.train_dnn),
         "BC": (load_bc, bc.preprocess_tsetlin, bc.train_tsetlin, bc.preprocess_dnn, bc.train_dnn),
         "SONAR": (load_sonar, sonar.preprocess_tsetlin, sonar.train_tsetlin, sonar.preprocess_dnn, sonar.train_dnn),
@@ -118,7 +119,7 @@ def main():
     }
 
     # Config
-    run_for = ["TUANDROMD"]
+    run_for = ["MNIST"]
     n_bootstrap = 3
 
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
