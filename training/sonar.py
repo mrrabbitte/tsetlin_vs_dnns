@@ -13,15 +13,15 @@ def preprocess_tsetlin(x,y):
 
 
 def train_tsetlin(x_train, y_train):
-    discretizer = KBinsDiscretizer(encode="onehot", strategy="quantile", n_bins=2)
+    discretizer = KBinsDiscretizer(encode="onehot-dense", strategy="quantile", n_bins=5)
     discretizer.fit(x_train)
 
-    x_train = discretizer.transform(x_train).toarray()
+    x_train = discretizer.transform(x_train)
 
-    tm = MultiClassTsetlinMachine(200, 1.0, 15.0)
+    tm = MultiClassTsetlinMachine(200, 10.0, 5.0)
     tm.fit(x_train, y_train, epochs=10, incremental=True)
 
-    return lambda x_test: tm.predict(discretizer.transform(x_test).toarray())
+    return lambda x_test: tm.predict(discretizer.transform(x_test))
 
 
 def preprocess_dnn(x, y):

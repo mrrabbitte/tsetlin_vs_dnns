@@ -1,4 +1,6 @@
+import datetime
 import json
+import uuid
 
 from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd, load_census
 from training import hvr, mnist, sonar, bc, tuandromd, census
@@ -8,6 +10,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 import json
 import pylab as py
+import pylikwid
+
 
 class ExperimentResult:
 
@@ -46,13 +50,18 @@ def train_test_split(X, y, p_train=0.8):
 def scores_to_one_hot(scores):
     num_scores = np.shape(scores)[0]
     classes = np.zeros(np.shape(scores))
+
     for i in range(0, num_scores):
-        if scores[i][0] > scores[i][1]:
-            classes[i, 0] = 1
-            classes[i, 1] = 0
-        else:
-            classes[i, 0] = 0
-            classes[i, 1] = 1
+        score_row = scores[i]
+
+        max_score = np.max(score_row)
+        n_classes = len(score_row)
+
+        for j in range(0, n_classes):
+            if score_row[j] == max_score:
+                classes[i, j] = 1
+            else:
+                classes[i, j] = 0
     return classes
 
 
@@ -79,14 +88,8 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
     y_pred = predict(x_test)
     prediction_took_ms = time_ms() - started_predict_at
 
-    print(np.shape(y_test), np.shape(y_pred))
-    print(y_test[0], y_pred[0])
-
     if model_name == "dnn":
         y_test, y_pred = one_hot_to_classes(y_test), one_hot_to_classes(y_pred)
-
-    print(np.shape(y_test), np.shape(y_pred))
-    print(y_test[0], y_pred[0])
 
     f1_scores = f1_score(y_test, y_pred)
     acc = accuracy_score(y_test, y_pred)
@@ -119,57 +122,42 @@ def main():
 
     # Config
     run_for = ["SONAR"]
-    num_bootstrap = 100
+    N_bootstrap = 3
+
+    started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    run_id = str(uuid.uuid4())
 
     # Execution
     for (dataset_name, experiment) in experiments.items():
         if dataset_name not in run_for:
             continue
 
-        print("Running experiment for dataset: ", dataset_name)
+        print("Running experiment for dataset: {0} with run id: {1}".format(dataset_name, run_id))
 
         (loader, preprocess_tm, train_tm, preprocess_dnn, train_dnn) = experiment
 
         x, y = loader()
 
-        train_took_diffs = []
-        pred_took_diffs = []
-        f1_median_diffs = []
-        acc_diffs = []
+        with open("{0}-{1}.json".format(started_at, dataset_name), "w") as f:
+            for i in range(N_bootstrap):
+                x_train, y_train, x_test, y_test = train_test_split(x, y)
 
-        for i in range(num_bootstrap):
-            x_train, y_train, x_test, y_test = train_test_split(x, y)
-
-            tms_result = run_experiment(
+                tms_result = run_experiment(
                 "tm", dataset_name, x_train, y_train, x_test, y_test, preprocess_tm, train_tm)
 
-            print("Ran: {0} for TM, result: {1}".format(dataset_name, tms_result))
-
-            dnns_result = run_experiment(
+                dnns_result = run_experiment(
                 "dnn", dataset_name, x_train, y_train, x_test, y_test, preprocess_dnn, train_dnn)
 
-            print("Ran: {0} for DNN, result {1}".format(dataset_name, dnns_result))
+                print(tms_result)
+                print(dnns_result)
 
-            train_took_diffs.append(dnns_result.training_took_ms - tms_result.training_took_ms)
-            pred_took_diffs.append(dnns_result.prediction_took_ms - tms_result.prediction_took_ms)
-            f1_median_diffs.append(dnns_result.f1_median - tms_result.f1_median)
-            acc_diffs.append(dnns_result.acc - tms_result.acc)
-
-        py.hist(train_took_diffs)
-        py.title("Difference in training time [ms]")
-        py.show()
-
-        py.hist(pred_took_diffs)
-        py.title("Difference in prediction time [ms]")
-        py.show()
-
-        py.hist(f1_median_diffs)
-        py.title("Difference in model performance - median F1")
-        py.show()
-
-        py.hist(acc_diffs)
-        py.title("Difference in model performance - accuracy")
-        py.show()
+                f.write(json.dumps({
+                    "tm": tms_result.__dict__,
+                    "dnn": dnns_result.__dict__,
+                    "run_id": run_id,
+                    "boots_i": i,
+                    "N_boots": N_bootstrap
+                }) + "\n")
 
 
 if __name__ == "__main__":
