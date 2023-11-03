@@ -33,33 +33,46 @@ CATEGORICAL_COLUMNS = [1, 3, 5, 6, 7, 8, 9, 13]
 NUMERIC_COLUMNS = [2, 4, 10, 11, 12]
 
 
-def run_tsetlin(x_train, y_train, x_test, y_test):
-    x_train, x_test = __preprocess_x(x_train), __preprocess_x(x_test)
-    y_train, y_test = __preprocess_y(y_train), __preprocess_y(y_test)
+def preprocess_tsetlin(x, y):
+    return x, __preprocess_y(y)
+
+
+def train_tsetlin(x, y):
+    categorical_encoder = OneHotEncoder(categories=CATEGORIES)
+    categorical_encoder.fit(x[:, CATEGORICAL_COLUMNS])
+
+    discretizer = KBinsDiscretizer(encode="onehot-dense",
+                                   strategy="quantile",
+                                   n_bins=3)
+    discretizer.fit(x[:, NUMERIC_COLUMNS])
+
+    encode_x = lambda data: np.concatenate(
+        (categorical_encoder.transform(data[:, CATEGORICAL_COLUMNS]).toarray(),
+         discretizer.transform(data[:, NUMERIC_COLUMNS])), axis=1)
+
+    x = encode_x(x)
 
     tm = MultiClassTsetlinMachine(250, 10, 1)
+    tm.fit(x, y, epochs=50, incremental=True)
 
-    start_training = time()
-    tm.fit(x_train, y_train, epochs=50, incremental=True)
-    stop_training = time()
-
-    acc = 100 * (tm.predict(x_test) == y_test).mean()
-
-    return acc, stop_training - start_training
+    return lambda x_test: tm.predict(encode_x(x_test))
 
 
-def run_dnn(x_train, y_train, x_test, y_test):
-    x_train, x_test = __preprocess_x(x_train), __preprocess_x(x_test)
-    x_train, x_test = x_train.astype('float32'), x_test.astype('float32')
+def preprocess_dnn(x, y):
+    return x, to_categorical(__preprocess_y(y))
 
-    y_train, y_test = __preprocess_y(y_train), __preprocess_y(y_test)
+
+def train_dnn(x, y):
+    categorical_encoder = OneHotEncoder(categories=CATEGORIES)
+    categorical_encoder.fit(x[:, CATEGORICAL_COLUMNS])
+
+    encode_x = lambda data: np.concatenate(
+        (categorical_encoder.transform(data[:, CATEGORICAL_COLUMNS]).toarray(),
+         data[:, NUMERIC_COLUMNS]), axis=1).astype('float32')
+    x = encode_x(x)
 
     # compute the number of labels
-    num_labels = len(np.unique(y_train))
-
-    # convert to one-hot vector
-    y_train = to_categorical(y_train)
-    y_test = to_categorical(y_test)
+    num_labels = len(np.unique(y))
 
     # network parameters
     batch_size = 50
@@ -67,7 +80,7 @@ def run_dnn(x_train, y_train, x_test, y_test):
     dropout = 0.3
 
     model = Sequential()
-    model.add(Dense(hidden_units, input_dim=x_train.shape[1]))
+    model.add(Dense(hidden_units, input_dim=x.shape[1]))
     model.add(Activation('relu'))
     model.add(Dropout(dropout))
     model.add(Dense(hidden_units))
@@ -80,29 +93,10 @@ def run_dnn(x_train, y_train, x_test, y_test):
                   optimizer='adam',
                   metrics=['accuracy'])
 
-    start_training = time()
-    model.fit(x_train, y_train, epochs=120, batch_size=batch_size, verbose=0)
-    stop_training = time()
+    model.fit(x, y, epochs=120, batch_size=batch_size, verbose=0)
 
-    _, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
-
-    return acc, stop_training - start_training
+    return lambda x_test: model.predict(encode_x(x_test), batch_size)
 
 
 def __preprocess_y(y):
     return np.where(y == '>50K', 1, 0)
-
-
-def __preprocess_x(x):
-    categoricals = x[:, CATEGORICAL_COLUMNS]
-    categoricals_one_hot = OneHotEncoder(categories=CATEGORIES).fit(categoricals).transform(categoricals)
-
-    numerics = x[:, NUMERIC_COLUMNS]
-    discretizer = KBinsDiscretizer(encode="onehot",
-                                   strategy="uniform",
-                                   n_bins=3)
-    discretizer.fit(numerics)
-
-    numerics_discretized = discretizer.transform(numerics)
-
-    return np.concatenate((categoricals_one_hot.toarray(), numerics_discretized.toarray()), axis=1)

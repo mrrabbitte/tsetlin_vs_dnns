@@ -28,7 +28,7 @@ class ExperimentResult:
 
 
 def time_ms():
-    return time() * 100
+    return time() * 1000
 
 
 def train_test_split(X, y, p_train=0.8):
@@ -103,26 +103,21 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
         acc)
 
 
-def log(dataset, model, acc, took):
-    logline = {"dataset": dataset, "model": model, "acc": acc, "took [s]": took}
-
-    print(json.dumps(logline))
-
-
 def main():
     # Specification
     experiments = {
         "MNIST": (load_mnist, mnist.run_tsetlin, mnist.run_dnn),
-        "HVR": (load_hvr, hvr.run_tsetlin, hvr.run_dnn),
-        "BC": (load_bc, bc.run_tsetlin, bc.run_dnn),
+        "HVR": (load_hvr, hvr.preprocess_tsetlin, hvr.train_tsetlin, hvr.preprocess_dnn, hvr.train_dnn),
+        "BC": (load_bc, bc.preprocess_tsetlin, bc.train_tsetlin, bc.preprocess_dnn, bc.train_dnn),
         "SONAR": (load_sonar, sonar.preprocess_tsetlin, sonar.train_tsetlin, sonar.preprocess_dnn, sonar.train_dnn),
         "TUANDROMD": (load_tuandromd, tuandromd.run_tsetlin, tuandromd.run_dnn),
-        "CENSUS": (load_census, census.run_tsetlin, census.run_dnn)
+        "CENSUS": (load_census,
+                   census.preprocess_tsetlin, census.train_tsetlin, census.preprocess_dnn, census.train_dnn)
     }
 
     # Config
-    run_for = ["SONAR"]
-    N_bootstrap = 3
+    run_for = ["HVR"]
+    n_bootstrap = 3
 
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
     run_id = str(uuid.uuid4())
@@ -132,23 +127,27 @@ def main():
         if dataset_name not in run_for:
             continue
 
-        print("Running experiment for dataset: {0} with run id: {1}".format(dataset_name, run_id))
+        ## TODO: Ensure that all classes are present in the training set
+
+        print("Running experiment for dataset: {0} with run id: {1}, started at: {2}".format(
+            dataset_name, run_id, started_at))
 
         (loader, preprocess_tm, train_tm, preprocess_dnn, train_dnn) = experiment
 
         x, y = loader()
 
         with open("{0}-{1}.json".format(started_at, dataset_name), "w") as f:
-            for i in range(N_bootstrap):
+            for i in range(n_bootstrap):
                 x_train, y_train, x_test, y_test = train_test_split(x, y)
 
                 tms_result = run_experiment(
-                "tm", dataset_name, x_train, y_train, x_test, y_test, preprocess_tm, train_tm)
-
-                dnns_result = run_experiment(
-                "dnn", dataset_name, x_train, y_train, x_test, y_test, preprocess_dnn, train_dnn)
+                     "tm", dataset_name, x_train, y_train, x_test, y_test, preprocess_tm, train_tm)
 
                 print(tms_result)
+
+                dnns_result = run_experiment(
+                    "dnn", dataset_name, x_train, y_train, x_test, y_test, preprocess_dnn, train_dnn)
+
                 print(dnns_result)
 
                 f.write(json.dumps({
@@ -156,7 +155,7 @@ def main():
                     "dnn": dnns_result.__dict__,
                     "run_id": run_id,
                     "boots_i": i,
-                    "N_boots": N_bootstrap
+                    "N_boots": n_bootstrap
                 }) + "\n")
 
 

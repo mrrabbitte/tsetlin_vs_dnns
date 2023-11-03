@@ -10,37 +10,29 @@ from keras.utils import to_categorical
 from sklearn.preprocessing import KBinsDiscretizer
 
 
-def run_tsetlin(x_train, y_train, x_test, y_test):
-    y_train, y_test = __preprocess_y(y_train), __preprocess_y(y_test)
+def preprocess_tsetlin(x,y):
+    return x, __preprocess_y(y)
 
-    tm = MultiClassTsetlinMachine(250, 10, 1)
 
-    start_training = time()
-    discretizer = KBinsDiscretizer(encode="onehot", strategy="quantile", n_bins=5)
+def train_tsetlin(x_train, y_train):
+    discretizer = KBinsDiscretizer(encode="onehot-dense", strategy="quantile", n_bins=5)
     discretizer.fit(x_train)
 
-    x_train, x_test = discretizer.transform(x_train).toarray(), discretizer.transform(x_test).toarray()
+    x_train = discretizer.transform(x_train)
 
+    tm = MultiClassTsetlinMachine(250, 10, 1)
     tm.fit(x_train, y_train, epochs=50, incremental=True)
-    stop_training = time()
 
-    acc = 100 * (tm.predict(x_test) == y_test).mean()
-
-    return acc, stop_training - start_training
+    return lambda x_test: tm.predict(discretizer.transform(x_test))
 
 
-def run_dnn(x_train, y_train, x_test, y_test):
-    x_train = x_train.astype('float32')
-    x_test = x_test.astype('float32')
+def preprocess_dnn(x, y):
+    return x.astype('float32'), to_categorical(__preprocess_y(y))
 
-    y_train, y_test = __preprocess_y(y_train), __preprocess_y(y_test)
 
+def train_dnn(x_train, y_train):
     # compute the number of labels
     num_labels = len(np.unique(y_train))
-
-    # convert to one-hot vector
-    y_train = to_categorical(y_train)
-    y_test = to_categorical(y_test)
 
     # network parameters
     batch_size = 50
@@ -61,13 +53,9 @@ def run_dnn(x_train, y_train, x_test, y_test):
                   optimizer='adam',
                   metrics=['accuracy'])
 
-    start_training = time()
     model.fit(x_train, y_train, epochs=120, batch_size=batch_size, verbose=0)
-    stop_training = time()
 
-    _, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
-
-    return acc, stop_training - start_training
+    return lambda x_test: model.predict(x_test, batch_size)
 
 
 def __preprocess_y(y):

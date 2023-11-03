@@ -8,39 +8,25 @@ from keras.utils import to_categorical
 import numpy as np
 
 
-def run_tsetlin(x_train, y_train, x_test, y_test):
-    x_train = __preprocess_x(x_train)
-    x_test = __preprocess_x(x_test)
-
-    y_train = __preprocess_y(y_train)
-    y_test = __preprocess_y(y_test)
-
-    tm = MultiClassTsetlinMachine(100, 10.0, 2.0)
-
-    start_training = time()
-    tm.fit(x_train, y_train, epochs=10, incremental=True)
-    stop_training = time()
-
-    acc = 100 * (tm.predict(x_test) == y_test).mean()
-
-    return acc, stop_training - start_training
+def preprocess_tsetlin(x, y):
+    return __preprocess_x(x), __preprocess_y(y)
 
 
-def run_dnn(x_train, y_train, x_test, y_test):
-    x_train = __preprocess_x(x_train).astype('float32')
-    x_test = __preprocess_x(x_test).astype('float32')
+def train_tsetlin(x_train, y_train):
+    tm = MultiClassTsetlinMachine(200, 10.0, 5.0)
 
-    y_train = __preprocess_y(y_train)
-    y_test = __preprocess_y(y_test)
+    tm.fit(x_train, y_train, epochs=20, incremental=True)
 
-    # compute the number of labels
+    return lambda x_test: tm.predict(x_test)
+
+
+def preprocess_dnn(x, y):
+    return __preprocess_x(x).astype('float32'), to_categorical(__preprocess_y(y))
+
+
+def train_dnn(x_train, y_train):
     num_labels = len(np.unique(y_train))
 
-    # convert to one-hot vector
-    y_train = to_categorical(y_train)
-    y_test = to_categorical(y_test)
-
-    # network parameters
     batch_size = 50
     hidden_units = 72
     dropout = 0.3
@@ -59,13 +45,9 @@ def run_dnn(x_train, y_train, x_test, y_test):
                   optimizer='adam',
                   metrics=['accuracy'])
 
-    start_training = time()
     model.fit(x_train, y_train, epochs=120, batch_size=batch_size, verbose=0)
-    stop_training = time()
 
-    _, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
-
-    return acc, stop_training - start_training
+    return lambda x_test: model.predict(x_test, batch_size)
 
 
 def __preprocess_x(x):
