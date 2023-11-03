@@ -53,7 +53,7 @@ def train_dnn(x_train, y_train):
 
     model.fit(x_train, y_train, epochs=120, batch_size=batch_size, verbose=0)
 
-    return lambda x_test: model.predict(x_test, batch_size)
+    return lambda x_test: model.predict(x_test, batch_size=batch_size)
 
 
 def __preprocess_y(y):

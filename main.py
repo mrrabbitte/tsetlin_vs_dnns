@@ -110,13 +110,15 @@ def main():
         "HVR": (load_hvr, hvr.preprocess_tsetlin, hvr.train_tsetlin, hvr.preprocess_dnn, hvr.train_dnn),
         "BC": (load_bc, bc.preprocess_tsetlin, bc.train_tsetlin, bc.preprocess_dnn, bc.train_dnn),
         "SONAR": (load_sonar, sonar.preprocess_tsetlin, sonar.train_tsetlin, sonar.preprocess_dnn, sonar.train_dnn),
-        "TUANDROMD": (load_tuandromd, tuandromd.run_tsetlin, tuandromd.run_dnn),
+        "TUANDROMD": (load_tuandromd,
+                      tuandromd.preprocess_tsetlin, tuandromd.train_tsetlin,
+                      tuandromd.preprocess_dnn, tuandromd.train_dnn),
         "CENSUS": (load_census,
                    census.preprocess_tsetlin, census.train_tsetlin, census.preprocess_dnn, census.train_dnn)
     }
 
     # Config
-    run_for = ["HVR"]
+    run_for = ["TUANDROMD"]
     n_bootstrap = 3
 
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
