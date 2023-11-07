@@ -1,27 +1,31 @@
 import datetime
-import json
+
 import uuid
 
+import tensorflow
+
 from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd, load_census
+from measurement import power
 from training import hvr, mnist, sonar, bc, tuandromd, census
 import numpy as np
 from time import time
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 import json
-import pylab as py
-import pylikwid
 
 
 class ExperimentResult:
 
-    def __init__(self, model_name, dataset_name, training_took_ms, prediction_took_ms, f1_median, acc):
+    def __init__(self, model_name, dataset_name, training_took_ms, prediction_took_ms, f1_median, acc,
+                 training_energy_micro_jules, prediction_energy_micro_jules):
         self.model_name = model_name
         self.dataset_name = dataset_name
         self.training_took_ms = training_took_ms
         self.prediction_took_ms = prediction_took_ms
         self.f1_median = f1_median
         self.acc = acc
+        self.training_energy_micro_jules = training_energy_micro_jules
+        self.prediction_energy_micro_jules = prediction_energy_micro_jules
 
     def __str__(self):
         return json.dumps(self.__dict__)
@@ -80,13 +84,17 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
     x_train, y_train = preprocess(x_train, y_train)
     x_test, y_test = preprocess(x_test, y_test)
 
+    power_training_at = power.start_power()
     started_training_at = time_ms()
     predict = train(x_train, y_train)
     training_took_ms = time_ms() - started_training_at
+    trainig_took_micro_jules = power.get_power_sum(power_training_at, power.stop_power())
 
+    power_predict_at = power.start_power()
     started_predict_at = time_ms()
     y_pred = predict(x_test)
     prediction_took_ms = time_ms() - started_predict_at
+    prediction_took_micro_jules = power.get_power_sum(power_predict_at, power.stop_power())
 
     if model_name == "dnn":
         y_test, y_pred = one_hot_to_classes(y_test), one_hot_to_classes(y_pred)
@@ -100,7 +108,9 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
         training_took_ms,
         prediction_took_ms,
         np.median(f1_scores),
-        acc)
+        acc,
+        trainig_took_micro_jules,
+        prediction_took_micro_jules)
 
 
 def main():
@@ -118,9 +128,14 @@ def main():
                    census.preprocess_tsetlin, census.train_tsetlin, census.preprocess_dnn, census.train_dnn)
     }
 
+    # Setup
+    gpu_devices = tensorflow.config.experimental.list_physical_devices('GPU')
+    for device in gpu_devices:
+        tensorflow.config.experimental.set_memory_growth(device, True)
+
     # Config
-    run_for = ["MNIST"]
-    n_bootstrap = 3
+    run_for = ["TUANDROMD"]
+    n_bootstrap = 100
 
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
     run_id = str(uuid.uuid4())
@@ -129,8 +144,6 @@ def main():
     for (dataset_name, experiment) in experiments.items():
         if dataset_name not in run_for:
             continue
-
-        ## TODO: Ensure that all classes are present in the training set
 
         print("Running experiment for dataset: {0} with run id: {1}, started at: {2}".format(
             dataset_name, run_id, started_at))
