@@ -107,6 +107,47 @@ def load_census():
     return x, y
 
 
+# @misc{misc_annealing_3,
+#   title        = {{Annealing}},
+#   howpublished = {UCI Machine Learning Repository},
+#   note         = {{DOI}: https://doi.org/10.24432/C5RW2F}
+# }
+def load_annealing():
+    return None, None
+
+
+# @misc{misc_flags_40,
+#   title        = {{Flags}},
+#   year         = {1990},
+#   howpublished = {UCI Machine Learning Repository},
+#   note         = {{DOI}: https://doi.org/10.24432/C52C7Z}
+# }
+def load_flags():
+    return None, None
+
+
+# @misc{misc_soybean_(large)_90,
+#   author       = {Michalski,R.S. and Chilausky,R.L.},
+#   title        = {{Soybean (Large)}},
+#   year         = {1988},
+#   howpublished = {UCI Machine Learning Repository},
+#   note         = {{DOI}: https://doi.org/10.24432/C5JG6Z}
+# }
+def load_soybeans():
+    return None, None
+
+
+# @misc{misc_student_performance_320,
+#   author       = {Cortez,Paulo},
+#   title        = {{Student Performance}},
+#   year         = {2014},
+#   howpublished = {UCI Machine Learning Repository},
+#   note         = {{DOI}: https://doi.org/10.24432/C5TG7T}
+# }
+def load_student():
+    return None, None
+
+
 # This is to sanitize the data and get rid of trivial bugs downstream.
 def strip_strings(df):
     strings = df.select_dtypes(['object'])
