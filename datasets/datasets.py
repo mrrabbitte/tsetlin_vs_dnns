@@ -133,7 +133,14 @@ def load_annealing():
 #   note         = {{DOI}: https://doi.org/10.24432/C52C7Z}
 # }
 def load_flags():
-    return None, None
+    data = pd.read_csv(resource_stream("datasets.data.flags", "flag.data"))
+
+    data = strip_strings(data).to_numpy()
+
+    x = np.concatenate((data[:, 1:6], data[:, 7:]), axis=1)
+    y = data[:, 6]  # Taking religion as the category
+
+    return x, y
 
 
 # @misc{misc_soybean_(large)_90,

@@ -9,47 +9,41 @@ from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.preprocessing import OneHotEncoder
 
 CATEGORIES = [
-    ["GB", "GK", "GS", "TN", "ZA", "ZF", "ZH", "ZM", "ZS", "?"],
-    ["C", "H", "G"],
-    ["R", "A", "U", "K", "M", "S", "W", "V", "?"],
-    ["T", "?"],
-    ["S", "A", "X", "?"],
-    ["1", "2", "3", "4", "5", "?"],
-    ["N", "?"],
-    ["P", "M", "?"],
-    ["D", "E", "F", "G", "?"],
-    ["1", "2", "3", "4", "5", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["B", "M", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["C", "?"],
-    ["P", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["B", "R", "V", "C", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["Y", "?"],
-    ["COIL", "SHEET", "?"],
-    ["Y", "N", "?"],
-    [0, 500, 600, 760],
-    ["1", "2", "3", "?"]
+    [1, 2, 3, 4, 5, 6],
+    [1, 2, 3, 4],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    [0, 1, 2, 3, 5],
+    [0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 13, 14],
+    [1, 2, 3, 4, 5, 6, 7, 8],
+    [0, 1],
+    [0, 1],
+    [0, 1],
+    [0, 1],
+    [0, 1],
+    [0, 1],
+    [0, 1],
+    ['black', 'blue', 'brown', 'gold', 'green', 'orange', 'red', 'white'],
+    [0, 1, 2, 4],
+    [0, 1, 2],
+    [0, 1],
+    [0, 1, 4],
+    [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 14, 15, 22, 50],
+    [0, 1],
+    [0, 1],
+    [0, 1],
+    [0, 1],
+    [0, 1],
+    ['black', 'blue', 'gold', 'green', 'orange', 'red', 'white'],
+    ['black', 'blue', 'brown', 'gold', 'green', 'orange', 'red', 'white']
 ]
 
-CATEGORICAL_COLUMNS = [0, 1, 2, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
-                       29, 30, 31, 35, 36, 37]
-NUMERIC_COLUMNS = [3, 4, 8, 32, 33, 34]
+
+CATEGORICAL_COLUMNS = [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+NUMERIC_COLUMNS = [2, 3]
 
 
 def preprocess_tsetlin(x, y):
-    return x, __preprocess_y(y)
+    return x, y
 
 
 def train_tsetlin(x, y):
@@ -74,7 +68,7 @@ def train_tsetlin(x, y):
 
 
 def preprocess_dnn(x, y):
-    return x, to_categorical(__preprocess_y(y))
+    return x, to_categorical(y)
 
 
 def train_dnn(x, y):
@@ -92,7 +86,7 @@ def train_dnn(x, y):
     # network parameters
     batch_size = 50
     hidden_units = 250
-    dropout = 0.0001
+    dropout = 0.1
 
     model = Sequential()
     model.add(Dense(hidden_units, input_dim=x.shape[1]))
@@ -112,14 +106,3 @@ def train_dnn(x, y):
 
     return lambda x_test: model.predict(encode_x(x_test), batch_size)
 
-
-def __preprocess_y(y):
-    categories = {
-        "1": 0,
-        "2": 1,
-        "3": 2,  # 4 has 0 instances, so we will ignore it.
-        "5": 3,
-        "U": 4
-    }
-
-    return np.vectorize(lambda cat: categories[cat])(y)

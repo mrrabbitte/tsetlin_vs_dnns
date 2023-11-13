@@ -4,9 +4,10 @@ import uuid
 
 import tensorflow
 
-from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd, load_census, load_annealing
+from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd, load_census, load_annealing, \
+    load_flags
 from measurement import power
-from training import hvr, mnist, sonar, bc, tuandromd, census, annealing
+from training import hvr, mnist, sonar, bc, tuandromd, census, annealing, flags
 import numpy as np
 from time import time
 from sklearn.metrics import accuracy_score
@@ -97,6 +98,9 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
     prediction_took_ms = time_ms() - started_predict_at
     prediction_took_micro_jules = power.get_power_sum(power_predict_at, power.stop_power())
 
+    print(y_test, y_pred)
+    print(np.unique(y_test), np.unique(y_pred))
+
     if model_name == "dnn":
         y_test, y_pred = one_hot_to_classes(y_test), one_hot_to_classes(scores_to_one_hot(y_pred))
 
@@ -129,7 +133,8 @@ def main():
         "CENSUS": (load_census,
                    census.preprocess_tsetlin, census.train_tsetlin, census.preprocess_dnn, census.train_dnn),
         "ANNEALING": (load_annealing, annealing.preprocess_tsetlin, annealing.train_tsetlin,
-                      annealing.preprocess_dnn, annealing.train_dnn)
+                      annealing.preprocess_dnn, annealing.train_dnn),
+        "FLAGS": (load_flags, flags.preprocess_tsetlin, flags.train_tsetlin, flags.preprocess_dnn, flags.train_dnn)
     }
 
     # Setup
@@ -138,7 +143,7 @@ def main():
         tensorflow.config.experimental.set_memory_growth(device, True)
 
     # Config
-    run_for = ["ANNEALING"]
+    run_for = ["FLAGS"]
     n_bootstrap = 1
 
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
