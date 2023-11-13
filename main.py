@@ -4,9 +4,9 @@ import uuid
 
 import tensorflow
 
-from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd, load_census
+from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd, load_census, load_annealing
 from measurement import power
-from training import hvr, mnist, sonar, bc, tuandromd, census
+from training import hvr, mnist, sonar, bc, tuandromd, census, annealing
 import numpy as np
 from time import time
 from sklearn.metrics import accuracy_score
@@ -16,12 +16,13 @@ import json
 
 class ExperimentResult:
 
-    def __init__(self, model_name, dataset_name, training_took_ms, prediction_took_ms, f1_median, acc,
+    def __init__(self, model_name, dataset_name, training_took_ms, prediction_took_ms, f1_scores, f1_median, acc,
                  training_energy_micro_jules, prediction_energy_micro_jules):
         self.model_name = model_name
         self.dataset_name = dataset_name
         self.training_took_ms = training_took_ms
         self.prediction_took_ms = prediction_took_ms
+        self.f1_scores = list(f1_scores)
         self.f1_median = f1_median
         self.acc = acc
         self.training_energy_micro_jules = training_energy_micro_jules
@@ -73,10 +74,10 @@ def one_hot_to_classes(scores):
     num_scores = np.shape(scores)[0]
     classes = np.zeros((num_scores, ))
     for i in range(0, num_scores):
-        if scores[i][0] > scores[i][1]:
-            classes[i] = 0
-        else:
-            classes[i] = 1
+        score = scores[i]
+        for clazz in range(0, len(score)):
+            if score[clazz] == 1:
+                classes[i] = clazz
     return classes
 
 
@@ -97,7 +98,7 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
     prediction_took_micro_jules = power.get_power_sum(power_predict_at, power.stop_power())
 
     if model_name == "dnn":
-        y_test, y_pred = one_hot_to_classes(y_test), one_hot_to_classes(y_pred)
+        y_test, y_pred = one_hot_to_classes(y_test), one_hot_to_classes(scores_to_one_hot(y_pred))
 
     f1_scores = f1_score(y_test, y_pred, average=None)
     acc = accuracy_score(y_test, y_pred)
@@ -107,6 +108,7 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
         dataset_name,
         training_took_ms,
         prediction_took_ms,
+        f1_scores,
         np.median(f1_scores),
         acc,
         trainig_took_micro_jules,
@@ -125,7 +127,9 @@ def main():
                       tuandromd.preprocess_tsetlin, tuandromd.train_tsetlin,
                       tuandromd.preprocess_dnn, tuandromd.train_dnn),
         "CENSUS": (load_census,
-                   census.preprocess_tsetlin, census.train_tsetlin, census.preprocess_dnn, census.train_dnn)
+                   census.preprocess_tsetlin, census.train_tsetlin, census.preprocess_dnn, census.train_dnn),
+        "ANNEALING": (load_annealing, annealing.preprocess_tsetlin, annealing.train_tsetlin,
+                      annealing.preprocess_dnn, annealing.train_dnn)
     }
 
     # Setup
@@ -134,8 +138,8 @@ def main():
         tensorflow.config.experimental.set_memory_growth(device, True)
 
     # Config
-    run_for = ["TUANDROMD"]
-    n_bootstrap = 100
+    run_for = ["ANNEALING"]
+    n_bootstrap = 1
 
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
     run_id = str(uuid.uuid4())

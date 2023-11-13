@@ -112,8 +112,18 @@ def load_census():
 #   howpublished = {UCI Machine Learning Repository},
 #   note         = {{DOI}: https://doi.org/10.24432/C5RW2F}
 # }
+# Classes: 1,2,3,4,5,U
 def load_annealing():
-    return None, None
+    data = pd.read_csv(resource_stream("datasets.data.annealing", "anneal.data"))
+    test = pd.read_csv(resource_stream("datasets.data.annealing", "anneal.test"))
+
+    data = strip_strings(data).to_numpy()
+    test = strip_strings(test).to_numpy()
+
+    x = np.concatenate((data[:, :38], test[:, :38]))
+    y = np.concatenate((data[:, 38], test[:, 38]))
+
+    return x, y
 
 
 # @misc{misc_flags_40,
