@@ -53,6 +53,7 @@ def train_test_split(X, y, p_train=0.8):
     return X[train_indices], y[train_indices], X[test_indices], y[test_indices]
 
 
+# TODO: Use np.argmax for this
 def scores_to_one_hot(scores):
     num_scores = np.shape(scores)[0]
     classes = np.zeros(np.shape(scores))
@@ -98,13 +99,12 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
     prediction_took_ms = time_ms() - started_predict_at
     prediction_took_micro_jules = power.get_power_sum(power_predict_at, power.stop_power())
 
-    print(y_test, y_pred)
-    print(np.unique(y_test), np.unique(y_pred))
-
     if model_name == "dnn":
         y_test, y_pred = one_hot_to_classes(y_test), one_hot_to_classes(scores_to_one_hot(y_pred))
 
-    f1_scores = f1_score(y_test, y_pred, average=None)
+    y_test, y_pred = y_test.astype('int'), y_pred.astype('int')
+
+    f1_scores = f1_score(list(y_test), list(y_pred), average=None)
     acc = accuracy_score(y_test, y_pred)
 
     return ExperimentResult(
@@ -123,7 +123,7 @@ def main():
     # Specification
     experiments = {
         "MNIST": (load_mnist, mnist.preprocess_tsetlin, mnist.train_tsetlin,
-                      mnist.preprocess_dnn, mnist.train_dnn),
+                  mnist.preprocess_dnn, mnist.train_dnn),
         "HVR": (load_hvr, hvr.preprocess_tsetlin, hvr.train_tsetlin, hvr.preprocess_dnn, hvr.train_dnn),
         "BC": (load_bc, bc.preprocess_tsetlin, bc.train_tsetlin, bc.preprocess_dnn, bc.train_dnn),
         "SONAR": (load_sonar, sonar.preprocess_tsetlin, sonar.train_tsetlin, sonar.preprocess_dnn, sonar.train_dnn),
@@ -143,7 +143,7 @@ def main():
         tensorflow.config.experimental.set_memory_growth(device, True)
 
     # Config
-    run_for = ["FLAGS"]
+    run_for = ["FLAGS", "TUANDROMD", "ANNEALING", "BC", "HVR"]
     n_bootstrap = 1
 
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')

@@ -61,7 +61,7 @@ def train_tsetlin(x, y):
 
     x = encode_x(x)
 
-    tm = MultiClassTsetlinMachine(250, 10, 1)
+    tm = MultiClassTsetlinMachine(150, 10, 0.5)
     tm.fit(x, y, epochs=50, incremental=True)
 
     return lambda x_test: tm.predict(encode_x(x_test))
@@ -86,7 +86,7 @@ def train_dnn(x, y):
     # network parameters
     batch_size = 50
     hidden_units = 250
-    dropout = 0.1
+    dropout = 0.0001
 
     model = Sequential()
     model.add(Dense(hidden_units, input_dim=x.shape[1]))
