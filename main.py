@@ -5,9 +5,9 @@ import uuid
 import tensorflow
 
 from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd, load_census, load_annealing, \
-    load_flags
+    load_flags, load_soybeans, load_glass
 from measurement import power
-from training import hvr, mnist, sonar, bc, tuandromd, census, annealing, flags
+from training import hvr, mnist, sonar, bc, tuandromd, census, annealing, flags, glass
 import numpy as np
 from time import time
 from sklearn.metrics import accuracy_score
@@ -104,7 +104,7 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
 
     y_test, y_pred = y_test.astype('int'), y_pred.astype('int')
 
-    f1_scores = f1_score(list(y_test), list(y_pred), average=None)
+    f1_scores = f1_score(y_test, y_pred, average=None)
     acc = accuracy_score(y_test, y_pred)
 
     return ExperimentResult(
@@ -134,7 +134,10 @@ def main():
                    census.preprocess_tsetlin, census.train_tsetlin, census.preprocess_dnn, census.train_dnn),
         "ANNEALING": (load_annealing, annealing.preprocess_tsetlin, annealing.train_tsetlin,
                       annealing.preprocess_dnn, annealing.train_dnn),
-        "FLAGS": (load_flags, flags.preprocess_tsetlin, flags.train_tsetlin, flags.preprocess_dnn, flags.train_dnn)
+        "FLAGS": (load_flags, flags.preprocess_tsetlin, flags.train_tsetlin, flags.preprocess_dnn, flags.train_dnn),
+        "GLASS": (load_glass, glass.preprocess_tsetlin, glass.train_tsetlin, glass.preprocess_dnn, glass.train_dnn),
+        "SOYBEANS": (load_soybeans, glass.preprocess_tsetlin, glass.train_tsetlin,
+                     glass.preprocess_dnn, glass.train_dnn)
     }
 
     # Setup
@@ -143,13 +146,13 @@ def main():
         tensorflow.config.experimental.set_memory_growth(device, True)
 
     # Config
-    run_for = ["FLAGS", "TUANDROMD", "ANNEALING", "BC", "HVR"]
+    run_for = ["GLASS"]
     n_bootstrap = 1
 
+    # Execution
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
     run_id = str(uuid.uuid4())
 
-    # Execution
     for (dataset_name, experiment) in experiments.items():
         if dataset_name not in run_for:
             continue

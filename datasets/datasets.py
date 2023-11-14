@@ -154,15 +154,24 @@ def load_soybeans():
     return None, None
 
 
-# @misc{misc_student_performance_320,
-#   author       = {Cortez,Paulo},
-#   title        = {{Student Performance}},
-#   year         = {2014},
+# @misc{misc_glass_identification_42,
+#   author       = {German,B.},
+#   title        = {{Glass Identification}},
+#   year         = {1987},
 #   howpublished = {UCI Machine Learning Repository},
-#   note         = {{DOI}: https://doi.org/10.24432/C5TG7T}
+#   note         = {{DOI}: https://doi.org/10.24432/C5WW2P}
 # }
-def load_student():
-    return None, None
+def load_glass():
+    data = pd.read_csv(resource_stream("datasets.data.glass", "glass.data")).to_numpy()
+
+    x = data[:, 1:10]
+    y = data[:, 10]
+
+    print("x:", np.shape(x))
+    print(x)
+    print(y)
+
+    return x, y
 
 
 # This is to sanitize the data and get rid of trivial bugs downstream.
