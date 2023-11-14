@@ -35,7 +35,7 @@ def train_dnn(x, y):
     # network parameters
     batch_size = 50
     hidden_units = 120
-    dropout = 0.001
+    dropout = 0.00001
 
     model = Sequential()
     model.add(Dense(hidden_units, input_dim=x.shape[1]))
