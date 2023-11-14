@@ -7,7 +7,7 @@ import tensorflow
 from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd, load_census, load_annealing, \
     load_flags, load_soybeans, load_glass
 from measurement import power
-from training import hvr, mnist, sonar, bc, tuandromd, census, annealing, flags, glass
+from training import hvr, mnist, sonar, bc, tuandromd, census, annealing, flags, glass, soybeans
 import numpy as np
 from time import time
 from sklearn.metrics import accuracy_score
@@ -136,8 +136,8 @@ def main():
                       annealing.preprocess_dnn, annealing.train_dnn),
         "FLAGS": (load_flags, flags.preprocess_tsetlin, flags.train_tsetlin, flags.preprocess_dnn, flags.train_dnn),
         "GLASS": (load_glass, glass.preprocess_tsetlin, glass.train_tsetlin, glass.preprocess_dnn, glass.train_dnn),
-        "SOYBEANS": (load_soybeans, glass.preprocess_tsetlin, glass.train_tsetlin,
-                     glass.preprocess_dnn, glass.train_dnn)
+        "SOYBEANS": (load_soybeans, soybeans.preprocess_tsetlin, soybeans.train_tsetlin,
+                     soybeans.preprocess_dnn, soybeans.train_dnn)
     }
 
     # Setup
@@ -146,7 +146,7 @@ def main():
         tensorflow.config.experimental.set_memory_growth(device, True)
 
     # Config
-    run_for = ["GLASS"]
+    run_for = ["SOYBEANS"]
     n_bootstrap = 1
 
     # Execution

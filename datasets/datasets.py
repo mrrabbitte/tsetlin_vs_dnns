@@ -151,7 +151,14 @@ def load_flags():
 #   note         = {{DOI}: https://doi.org/10.24432/C5JG6Z}
 # }
 def load_soybeans():
-    return None, None
+    data = pd.read_csv(resource_stream("datasets.data.soybeans", "soybean-large.data"))
+
+    data = strip_strings(data).to_numpy()
+
+    x = data[:, 1:]
+    y = data[:, 0]
+
+    return x, y
 
 
 # @misc{misc_glass_identification_42,
