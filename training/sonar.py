@@ -12,14 +12,14 @@ def preprocess_tsetlin(x,y):
     return x, __preprocess_y(y)
 
 
-def train_tsetlin(x_train, y_train):
+def train_tsetlin(x_train, y_train, num_clauses=200, T=10, s=5.0, epochs=10):
     discretizer = KBinsDiscretizer(encode="onehot-dense", strategy="quantile", n_bins=5)
     discretizer.fit(x_train)
 
     x_train = discretizer.transform(x_train)
 
-    tm = MultiClassTsetlinMachine(200, 10.0, 5.0)
-    tm.fit(x_train, y_train, epochs=10, incremental=True)
+    tm = MultiClassTsetlinMachine(num_clauses, T, s)
+    tm.fit(x_train, y_train, epochs=epochs, incremental=True)
 
     return lambda x_test: tm.predict(discretizer.transform(x_test))
 
@@ -28,14 +28,8 @@ def preprocess_dnn(x, y):
     return x.astype('float32'), to_categorical(__preprocess_y(y))
 
 
-def train_dnn(x_train, y_train):
-    # compute the number of labels
+def train_dnn(x_train, y_train, batch_size=50, hidden_units=120, dropout=0.3, epochs=120):
     num_labels = len(np.unique(y_train))
-
-    # network parameters
-    batch_size = 50
-    hidden_units = 120
-    dropout = 0.3
 
     model = Sequential()
     model.add(Dense(hidden_units, input_dim=x_train.shape[1]))
@@ -51,7 +45,7 @@ def train_dnn(x_train, y_train):
                   optimizer='adam',
                   metrics=['accuracy'])
 
-    model.fit(x_train, y_train, epochs=120, batch_size=batch_size, verbose=0)
+    model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=0)
 
     return lambda x_test: model.predict(x_test, batch_size=batch_size)
 

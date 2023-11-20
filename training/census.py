@@ -1,7 +1,6 @@
 from pyTsetlinMachineParallel.tm import MultiClassTsetlinMachine
 import numpy as np
 
-from time import time
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
 from keras.utils import to_categorical
@@ -37,7 +36,7 @@ def preprocess_tsetlin(x, y):
     return x, __preprocess_y(y)
 
 
-def train_tsetlin(x, y):
+def train_tsetlin(x, y, num_clauses=250, T=10, s=1, epochs=50):
     categorical_encoder = OneHotEncoder(categories=CATEGORIES)
     categorical_encoder.fit(x[:, CATEGORICAL_COLUMNS])
 
@@ -52,8 +51,8 @@ def train_tsetlin(x, y):
 
     x = encode_x(x)
 
-    tm = MultiClassTsetlinMachine(250, 10, 1)
-    tm.fit(x, y, epochs=50, incremental=True)
+    tm = MultiClassTsetlinMachine(num_clauses, T, s)
+    tm.fit(x, y, epochs=epochs, incremental=True)
 
     return lambda x_test: tm.predict(encode_x(x_test))
 
@@ -62,7 +61,7 @@ def preprocess_dnn(x, y):
     return x, to_categorical(__preprocess_y(y))
 
 
-def train_dnn(x, y):
+def train_dnn(x, y, batch_size=50, hidden_units=120, dropout=0.3, epochs=120):
     categorical_encoder = OneHotEncoder(categories=CATEGORIES)
     categorical_encoder.fit(x[:, CATEGORICAL_COLUMNS])
 
@@ -73,11 +72,6 @@ def train_dnn(x, y):
 
     # compute the number of labels
     num_labels = len(np.unique(y))
-
-    # network parameters
-    batch_size = 50
-    hidden_units = 120
-    dropout = 0.3
 
     model = Sequential()
     model.add(Dense(hidden_units, input_dim=x.shape[1]))
@@ -93,7 +87,7 @@ def train_dnn(x, y):
                   optimizer='adam',
                   metrics=['accuracy'])
 
-    model.fit(x, y, epochs=120, batch_size=batch_size, verbose=0)
+    model.fit(x, y, epochs=epochs, batch_size=batch_size, verbose=0)
 
     return lambda x_test: model.predict(encode_x(x_test), batch_size)
 
