@@ -101,4 +101,4 @@ if __name__ == "__main__":
     )).T.reshape(-1, 4)
 
     # Running grid search
-    grid_search(tm_gridz, dnn_gridz, ["TUANDROMD", "ANNEALING"])
+    grid_search(tm_gridz, dnn_gridz, ["FLAGS", "GLASS", "SOYBEANS"])
