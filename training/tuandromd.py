@@ -11,7 +11,7 @@ def preprocess_tsetlin(x, y):
     return x, __preprocess_y(y)
 
 
-def train_tsetlin(x_train, y_train, num_clauses=100, T=5, s=1, epochs=10):
+def train_tsetlin(x_train, y_train, num_clauses=250, T=1.0, s=5.0, epochs=80):
     tm = MultiClassTsetlinMachine(num_clauses, T, s)
 
     tm.fit(x_train, y_train, epochs=epochs, incremental=True)

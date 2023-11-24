@@ -13,7 +13,7 @@ def preprocess_tsetlin(x,y):
     return x, __preprocess_y(y)
 
 
-def train_tsetlin(x_train, y_train, num_clauses=250, T=10, s=1, epochs=50):
+def train_tsetlin(x_train, y_train, num_clauses=50, T=1.0, s=5.0, epochs=10):
     discretizer = KBinsDiscretizer(encode="onehot-dense", strategy="quantile", n_bins=5)
     discretizer.fit(x_train)
 

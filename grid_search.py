@@ -6,10 +6,16 @@ import numpy as np
 from experiment.experiment import get_experiments, train_test_split, run_experiment
 
 
+def discarded(x, val):
+    x.discard(val)
+    return x
+
+
 def ensure_all_classes(x, y):
     x_train, y_train, x_test, y_test = train_test_split(x, y)
 
-    while set(np.unique(y_train)) != set(np.unique(y_test)):
+    while (discarded(set(np.unique(y_train)), '2-4-d-injury')
+           != discarded(set(np.unique(y_test)), '2-4-d-injury')):
         x_train, y_train, x_test, y_test = train_test_split(x, y)
 
     return x_train, y_train, x_test, y_test
@@ -102,7 +108,7 @@ if __name__ == "__main__":
     # DNN params
     batch_sizez = [10, 20, 60, 100, 150]
     hidden_unitz = [50, 100, 150, 250]
-    dropoutz = [0.00000001, 0.00001, 0.1, 0.6, 0.9, 1.]
+    dropoutz = [0.00000001, 0.00001, 0.1, 0.6, 0.9, 0.99]
     epochz = [50, 100, 200]
 
     dnn_gridz = np.array(np.meshgrid(
@@ -111,10 +117,8 @@ if __name__ == "__main__":
         dropoutz,
         epochz
     )).T.reshape(-1, 4)
-    run_for = set(get_experiments().keys())
 
-    run_for.discard('CENSUS')
-    run_for.discard('MNIST')
+    run_for = ['SOYBEANS']  # set(get_experiments().keys())
 
     # Running grid search
     grid_search(tm_gridz, dnn_gridz, run_for)
