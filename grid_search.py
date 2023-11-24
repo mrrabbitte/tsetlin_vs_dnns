@@ -22,8 +22,11 @@ def grid_search(tm_grid, dnn_grid, run_for):
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
     run_id = str(uuid.uuid4())
 
+    print("Running grid search for: ", run_for)
+
     for (dataset_name, experiment) in experiments.items():
         if dataset_name not in run_for:
+            print("Skipping: ", dataset_name)
             continue
 
         print("Running experiment for dataset: {0} with run id: {1}, started at: {2}".format(
@@ -36,6 +39,9 @@ def grid_search(tm_grid, dnn_grid, run_for):
         x_train, y_train, x_test, y_test = ensure_all_classes(x, y)
 
         with open("grid-{0}-{1}.json".format(started_at, dataset_name), "w") as f:
+            i = 0.
+            total = 1. * len(tm_grid) + len(dnn_grid)
+
             for (num_clauses, T, s, epochs) in tm_grid:
                 params = {"num_clauses": int(num_clauses),
                           "T": T,
@@ -54,6 +60,9 @@ def grid_search(tm_grid, dnn_grid, run_for):
 
                 print(tms_result, params)
 
+                i += 1.
+                print("Progress TM for {0}: {1}".format(dataset_name, i / total))
+
             for (batch_size, hidden_units, dropout, epochs) in dnn_grid:
                 params = {"batch_size": int(batch_size),
                           "hidden_units": int(hidden_units),
@@ -71,6 +80,9 @@ def grid_search(tm_grid, dnn_grid, run_for):
                 }) + "\n")
 
                 print(dnns_result, params)
+
+                i += 1.
+                print("Progress DNN for {0}: {1}".format(dataset_name, i / total))
 
 
 if __name__ == "__main__":
@@ -99,6 +111,10 @@ if __name__ == "__main__":
         dropoutz,
         epochz
     )).T.reshape(-1, 4)
+    run_for = set(get_experiments().keys())
+
+    run_for.discard('CENSUS')
+    run_for.discard('MNIST')
 
     # Running grid search
-    grid_search(tm_gridz, dnn_gridz, ["FLAGS", "GLASS", "SOYBEANS"])
+    grid_search(tm_gridz, dnn_gridz, run_for)
