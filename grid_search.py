@@ -76,9 +76,9 @@ def grid_search(tm_grid, dnn_grid, run_for):
 if __name__ == "__main__":
     # TM params
     num_clausez = [50, 100, 150, 200, 250, 300]
-    Tz = [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0]
+    Tz = [0.01, 0.1, 1., 5., 10.]
     sz = [0.01, 0.1, 1.,  5., 10.]
-    epochz = [10, 40, 80]
+    epochz = [10, 40, 80, 100, 200]
 
     tm_gridz = np.array(np.meshgrid(
         num_clausez,
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # DNN params
     batch_sizez = [10, 20, 60, 100, 150]
     hidden_unitz = [50, 100, 150, 250]
-    dropoutz = [0.00000001, 0.00001, 0.1, 0.3, 0.6, 0.9]
+    dropoutz = [0.00000001, 0.00001, 0.1, 0.6, 0.9, 1.]
     epochz = [50, 100, 200]
 
     dnn_gridz = np.array(np.meshgrid(
