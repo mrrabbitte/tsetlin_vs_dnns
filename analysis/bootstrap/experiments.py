@@ -13,23 +13,33 @@ def merge(res, metrics_name, params_name):
     return merged
 
 
-def plot_results(results_df: pd.DataFrame, tm=False):
+def plot_results(results_df: pd.DataFrame):
     datasets = results_df.dataset_name.unique()
 
     for dataset in datasets:
         ds_res = results_df[results_df['dataset_name'] == dataset]
 
-        y_name = 'batch_size'
-        if tm:
-            y_name = 'num_clauses'
-        py.scatter(ds_res[y_name], ds_res['f1_median'])
-        py.title("{0}: {1} - {2}".format(("TM" if tm else "DNN"), dataset, y_name), loc='center')
-        py.show()
+        py.subplots(3, 1)
 
-        counts, bins = np.histogram(ds_res['f1_median'])
-
+        py.subplot(311)
+        vals = ds_res['tm_acc']
+        counts, bins = np.histogram(vals)
         py.stairs(counts, bins)
-        py.title(dataset, loc='center')
+        py.title("TM - " + dataset + " - Mean: {0}, Std: {1}".format(np.mean(vals), np.std(vals)),
+                 loc='center')
+
+        py.subplot(312)
+        vals = ds_res['dnn_acc']
+        counts, bins = np.histogram(vals)
+        py.stairs(counts, bins)
+        py.title("DNN - " + dataset + " - Mean: {0}, Std: {1}".format(np.mean(vals), np.std(vals)), loc='center')
+
+        py.subplot(313)
+        vals = ds_res['tm_acc'] - ds_res['dnn_acc']
+        counts, bins = np.histogram(vals)
+        py.stairs(counts, bins)
+        py.title("Difference - " + dataset + " - Mean: {0}, Std: {1}".format(np.mean(vals), np.std(vals)), loc='center')
+
         py.show()
 
 
@@ -49,11 +59,20 @@ def get_winners(results_df: pd.DataFrame):
     return winners_per_dataset
 
 
+def prefix(record, name):
+    updated = {}
+    for key in record.keys():
+        if key == 'dataset_name':
+            updated.update({key: record[key]})
+            continue
+        updated.update({name + "_" + key: record[key]})
+    return updated
+
+
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
 
-    dnn_results = []
-    tm_results = []
+    results = []
 
     result_files = list(filter(lambda x: x.endswith('.results'), next(os.walk(os.getcwd()), (None, None, []))[2]))
 
@@ -62,16 +81,16 @@ if __name__ == "__main__":
             for ln in f:
                 result = json.loads(ln)
 
-                if 'dnn' in result.keys():
-                    dnn_results.append(merge(result, 'dnn', 'dnn_params'))
-                elif 'tm' in result.keys():
-                    tm_results.append(merge(result, 'tm', 'tm_params'))
+                dnn = result.pop('dnn')
+                tm = result.pop('tm')
 
-    tm = pd.DataFrame.from_records(tm_results)
-    dnn = pd.DataFrame.from_records(dnn_results)
+                merged = {}
+                merged.update(prefix(dnn, 'dnn'))
+                merged.update(prefix(tm, 'tm'))
+                merged.update(result)
 
-    print(get_winners(tm))
-    print(get_winners(dnn))
+                results.append(merged)
 
-    plot_results(tm, True)
-    plot_results(dnn)
+    results = pd.DataFrame.from_records(results)
+
+    plot_results(results)
