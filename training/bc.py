@@ -13,7 +13,7 @@ def preprocess_tsetlin(x,y):
     return x, __preprocess_y(y)
 
 
-def train_tsetlin(x_train, y_train, num_clauses=50, T=1.0, s=5.0, epochs=10):
+def train_tsetlin(x_train, y_train, num_clauses=300, T=1.0, s=10.0, epochs=40):
     discretizer = KBinsDiscretizer(encode="onehot-dense", strategy="quantile", n_bins=5)
     discretizer.fit(x_train)
 
@@ -29,7 +29,7 @@ def preprocess_dnn(x, y):
     return x.astype('float32'), to_categorical(__preprocess_y(y))
 
 
-def train_dnn(x_train, y_train, batch_size=50, hidden_units=120, dropout=0.3, epochs=120):
+def train_dnn(x_train, y_train, batch_size=20, hidden_units=50, dropout=0.00000001, epochs=200):
     num_labels = len(np.unique(y_train))
 
     model = Sequential()

@@ -11,7 +11,7 @@ def preprocess_tsetlin(x, y):
     return x, __preprocess_y(y)
 
 
-def train_tsetlin(x_train, y_train, num_clauses=250, T=1.0, s=5.0, epochs=80):
+def train_tsetlin(x_train, y_train, num_clauses=100, T=10.0, s=5.0, epochs=100):
     tm = MultiClassTsetlinMachine(num_clauses, T, s)
 
     tm.fit(x_train, y_train, epochs=epochs, incremental=True)
@@ -23,7 +23,7 @@ def preprocess_dnn(x, y):
     return x.astype('float32'), to_categorical(__preprocess_y(y))
 
 
-def train_dnn(x_train, y_train, batch_size=20, hidden_units=200, dropout=0.3, epochs=120):
+def train_dnn(x_train, y_train, batch_size=150, hidden_units=250, dropout=0.1, epochs=50):
     num_labels = len(np.unique(y_train))
 
     model = Sequential()

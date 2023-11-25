@@ -46,7 +46,7 @@ def preprocess_tsetlin(x, y):
     return x, y
 
 
-def train_tsetlin(x, y, num_clauses=150, T=10, s=0.5, epochs=50):
+def train_tsetlin(x, y, num_clauses=150, T=5.0, s=5., epochs=10):
     categorical_encoder = OneHotEncoder(categories=CATEGORIES)
     categorical_encoder.fit(x[:, CATEGORICAL_COLUMNS])
 
