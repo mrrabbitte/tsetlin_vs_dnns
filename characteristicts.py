@@ -26,7 +26,7 @@ class DatasetCharacteristic:
         self.num_classes = num_classes
         self.num_instances = num_instances
         self.num_features = num_features
-        self.class_counts = list(class_counts)
+        self.class_counts = class_counts
         self.mutual_info = list(mutual_info)
         self.features_type = features_type
 
@@ -79,4 +79,4 @@ if __name__ == "__main__":
             result = characterize(ds_name, load, feat_type, pre_X)
             print(result)
 
-            f.write(json.dumps(result.__dict__))
+            f.write(json.dumps(result.__dict__) + "\n")
