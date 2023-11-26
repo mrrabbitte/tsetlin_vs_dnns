@@ -100,3 +100,15 @@ def train_dnn(x, y, batch_size=50, hidden_units=250, dropout=0.0001, epochs=120)
 
     return lambda x_test: model.predict(encode_x(x_test), batch_size)
 
+
+def replace(col, catz):
+    for i in range(0, len(col)):
+        col[i] = catz.index(col[i])
+    return col
+
+
+def categorical_to_int(X):
+    for i in range(0, len(CATEGORIES)):
+        col_num = CATEGORICAL_COLUMNS[i]
+        X[:, col_num] = replace(X[:, col_num], CATEGORIES[i])
+    return X

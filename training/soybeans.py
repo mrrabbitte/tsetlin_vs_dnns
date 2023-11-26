@@ -105,3 +105,16 @@ def __preprocess_y(y):
                   'purple-seed-stain', 'rhizoctonia-root-rot']
 
     return np.vectorize(lambda cat: categories.index(cat))(y)
+
+
+def replace(col, catz):
+    for i in range(0, len(col)):
+        col[i] = catz.index(col[i])
+    return col
+
+
+def categorical_to_int(X):
+    for i in range(0, len(CATEGORIES)):
+        col_num = i
+        X[:, col_num] = replace(X[:, col_num], CATEGORIES[i])
+    return X

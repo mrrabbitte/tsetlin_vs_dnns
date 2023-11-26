@@ -49,3 +49,12 @@ def train_dnn(x_train, y_train, batch_size=128, hidden_units=256, dropout=0.45, 
 
     return lambda x_test: model.predict(x_test, batch_size=batch_size)
 
+
+def unroll(X):
+    image_size = X.shape[1]
+    input_size = image_size * image_size
+
+    X = np.reshape(X, [-1, input_size])
+    X = X.astype('float32') / 255
+
+    return X

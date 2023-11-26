@@ -117,3 +117,16 @@ def __preprocess_y(y):
     }
 
     return np.vectorize(lambda cat: categories[cat])(y)
+
+
+def replace(col, catz):
+    for i in range(0, len(col)):
+        col[i] = catz.index(col[i])
+    return col
+
+
+def categorical_to_int(X):
+    for i in range(0, len(CATEGORIES)):
+        col_num = CATEGORICAL_COLUMNS[i]
+        X[:, col_num] = replace(X[:, col_num], CATEGORIES[i])
+    return X

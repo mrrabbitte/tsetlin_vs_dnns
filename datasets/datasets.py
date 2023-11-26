@@ -174,10 +174,6 @@ def load_glass():
     x = data[:, 1:10]
     y = data[:, 10]
 
-    print("x:", np.shape(x))
-    print(x)
-    print(y)
-
     return x, y
 
 

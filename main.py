@@ -34,7 +34,7 @@ def main():
         tensorflow.config.experimental.set_memory_growth(device, True)
 
     # Config
-    run_for = ["SOYBEANS", "GLASS", "FLAGS"]
+    run_for = ["CENSUS"]
     n_bootstrap = 250
 
     # Execution

@@ -57,3 +57,11 @@ def __preprocess_x(x):
 
 def __preprocess_y(y):
     return np.where(y == 'republican', 1, 0)
+
+
+def categorical_to_int(x):
+    x = np.where(x == 'y', 1, x)
+    x = np.where(x == 'n', 0, x)
+    x = np.where(x == '?', 2, x)
+
+    return x
