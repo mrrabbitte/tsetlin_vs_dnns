@@ -7,6 +7,8 @@ import numpy as np
 
 from scipy import spatial
 
+import scipy.stats as st
+
 def merge(res, metrics_name, params_name):
     merged = {}
     merged.update(res[metrics_name])
@@ -23,9 +25,47 @@ def read_characteristics():
     return by_dataset
 
 
+def plot_hist(title, vals):
+    counts, bins = np.histogram(vals, bins=100)
+    py.title(title + ", Normal-test:" + str(st.normaltest(vals)))
+    py.stairs(counts, bins, fill=True)
+    py.show()
+
+
 def compute_diffs(ds_res, name):
-    vals = ds_res['tm_' + name] - ds_res['dnn_' + name]
-    return np.mean(vals), np.std(vals)
+    tm_vals = ds_res['tm_' + name]
+    dnn_vals = ds_res['dnn_' + name]
+
+    #plot_hist("TM " + name, tm_vals)
+    #plot_hist("DNN " + name, dnn_vals)
+
+    H_stat, p_diff = st.kruskal(tm_vals, dnn_vals)
+
+    if p_diff > 0.05:
+        print("Significant: {0}, (p={1}), name: {2} ".format(H_stat, p_diff, name))
+
+    vals = tm_vals - dnn_vals
+
+    plot_hist(name, vals)
+    return H_stat, p_diff, np.mean(vals), np.std(vals)
+
+
+def compute_scaled_diffs(ds_res, name):
+    tm_vals = ds_res['tm_' + name]
+    dnn_vals = ds_res['dnn_' + name]
+
+    #plot_hist("TM " + name, tm_vals)
+    #plot_hist("DNN " + name, dnn_vals)
+
+    H_stat, p_diff = st.kruskal(tm_vals, dnn_vals)
+
+    if p_diff > 0.05:
+        print("Significant: {0}, (p={1}), name: {2} ".format(H_stat, p_diff, name))
+
+    vals = tm_vals - dnn_vals
+
+    plot_hist(name, vals)
+    return H_stat, p_diff, np.median(vals), np.std(vals)
 
 
 def balance_measure(class_counts):
@@ -34,7 +74,6 @@ def balance_measure(class_counts):
     print("CLASS COUNTS:", class_counts)
 
     for row in class_counts:
-        print("CLASS COUNTS: ", row)
         counts = list(row.values())
         N = len(counts)
         consines.append(spatial.distance.cosine(counts, np.ones(N) * (1./N)))
@@ -66,9 +105,13 @@ def analyse(results_df: pd.DataFrame):
 
         data = characteristics[dataset]
         for metric in metrics:
-            mean_diff, std_diff = compute_diffs(ds_res, metric)
+            H_stat, p_val, mean_diff, std_diff = compute_diffs(ds_res, metric)
+
             data.update({metric + "_diff_mean": mean_diff})
             data.update({metric + "_diff_std": std_diff})
+            data.update({metric + "_diff_H_stat": H_stat})
+            data.update({metric + "_diff_p_value": p_val})
+            print("Metric: {0}, F: {1}, p-value: {2}".format(metric, H_stat, p_val))
 
     results = pd.DataFrame.from_records(list(characteristics.values()))
 
@@ -99,9 +142,9 @@ def analyse(results_df: pd.DataFrame):
 
             print(x, y)
             
-            py.title(dataset_metric + " vs. " + metric)
+            py.title(dataset_metric + " vs. " + metric + ", corr: " + str(st.pearsonr(x, y)))
             py.scatter(x, y)
-            py.errorbar(x, y, yerr=err, fmt='o')
+            #py.errorbar(x, y, yerr=err, fmt='o')
 
             py.show()
 
