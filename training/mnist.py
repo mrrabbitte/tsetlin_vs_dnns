@@ -1,54 +1,38 @@
 
 from pyTsetlinMachineParallel.tm import MultiClassTsetlinMachine
 import numpy as np
-from time import time
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
 from keras.utils import to_categorical
 
 
-def run_tsetlin(x_train, y_train, x_test, y_test):
-    x_train = np.where(x_train.reshape((x_train.shape[0], 28 * 28)) > 75, 1, 0)
-    x_test = np.where(x_test.reshape((x_test.shape[0], 28 * 28)) > 75, 1, 0)
-
-    tm = MultiClassTsetlinMachine(100, 10.0, 2.0)
-
-    start_training = time()
-    tm.fit(x_train, y_train, epochs=10, incremental=True)
-    stop_training = time()
-
-    acc = 100 * (tm.predict(x_test) == y_test).mean()
-
-    return acc, stop_training - start_training
+def preprocess_tsetlin(x, y):
+    return np.where(x.reshape((x.shape[0], 28 * 28)) > 75, 1, 0), y
 
 
-def run_dnn(x_train, y_train, x_test, y_test):
-    # Binarize the data as well
-    # x_train = np.where(x_train > 75, 1, 0)
-    # x_test = np.where(x_test > 75, 1, 0)
+def train_tsetlin(x_train, y_train, num_clauses=100, T=10, s=2.0, epochs=10):
+    tm = MultiClassTsetlinMachine(num_clauses, T, s)
 
-    # compute the number of labels
-    num_labels = len(np.unique(y_train))
+    tm.fit(x_train, y_train, epochs=epochs, incremental=True)
 
-    # convert to one-hot vector
-    y_train = to_categorical(y_train)
-    y_test = to_categorical(y_test)
+    return lambda x_test: tm.predict(x_test)
 
-    image_size = x_train.shape[1]
+
+def preprocess_dnn(x, y):
+    image_size = x.shape[1]
     input_size = image_size * image_size
 
-    x_train = np.reshape(x_train, [-1, input_size])
-    x_train = x_train.astype('float32') / 255
-    x_test = np.reshape(x_test, [-1, input_size])
-    x_test = x_test.astype('float32') / 255
+    x = np.reshape(x, [-1, input_size])
+    x = x.astype('float32') / 255
 
-    # network parameters
-    batch_size = 128
-    hidden_units = 256
-    dropout = 0.45
+    return x,  to_categorical(y)
+
+
+def train_dnn(x_train, y_train, batch_size=128, hidden_units=256, dropout=0.45, epochs=20):
+    num_labels = 10
 
     model = Sequential()
-    model.add(Dense(hidden_units, input_dim=input_size))
+    model.add(Dense(hidden_units, input_dim=x_train.shape[1]))
     model.add(Activation('relu'))
     model.add(Dropout(dropout))
     model.add(Dense(hidden_units))
@@ -61,10 +45,16 @@ def run_dnn(x_train, y_train, x_test, y_test):
                   optimizer='adam',
                   metrics=['accuracy'])
 
-    start_training = time()
-    model.fit(x_train, y_train, epochs=20, batch_size=batch_size, verbose=0)
-    stop_training = time()
+    model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=0)
 
-    _, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
+    return lambda x_test: model.predict(x_test, batch_size=batch_size)
 
-    return acc, stop_training - start_training
+
+def unroll(X):
+    image_size = X.shape[1]
+    input_size = image_size * image_size
+
+    X = np.reshape(X, [-1, input_size])
+    X = X.astype('float32') / 255
+
+    return X

@@ -1,63 +1,87 @@
-import json
+import datetime
 
-from datasets.datasets import load_mnist, load_hvr, load_bc, load_sonar, load_tuandromd
-from training import hvr, mnist, sonar, bc, tuandromd
+import uuid
+
+import tensorflow
+
+from experiment.experiment import train_test_split, run_experiment, get_experiments
+
+import json
 import numpy as np
 
 
-def train_test_split(X, y, p_train=0.8):
-    assert X.shape[0] == y.shape[0]
-
-    num_train = int(p_train * X.shape[0])
-    num_examples = X.shape[0]
-
-    train_indices = np.random.choice(range(num_examples), size=(num_train,), replace=False)
-    test_indices = np.array(list(set(range(num_examples)) - set(train_indices)))
-
-    assert len(train_indices) == num_train
-    assert len(set(train_indices).intersection(set(test_indices))) == 0
-    assert len(set(train_indices).union(set(test_indices))) == num_examples
-
-    return X[train_indices], y[train_indices], X[test_indices], y[test_indices]
+def discarded(x, val):
+    x.discard(val)
+    return x
 
 
-def log(dataset, model, acc, took):
-    logline = {"dataset": dataset, "model": model, "acc": acc, "took [s]": took}
+def ensure_all_classes(x, y):
+    x_train, y_train, x_test, y_test = train_test_split(x, y)
 
-    print(json.dumps(logline))
+    while (discarded(set(np.unique(y_train)), '2-4-d-injury')
+           != discarded(set(np.unique(y_test)), '2-4-d-injury')):
+        x_train, y_train, x_test, y_test = train_test_split(x, y)
+
+    return x_train, y_train, x_test, y_test
 
 
-if __name__ == "__main__":
+def main():
     # Specification
-    experiments = {
-        "MNIST": (load_mnist, mnist.run_tsetlin, mnist.run_dnn),
-        "HVR": (load_hvr, hvr.run_tsetlin, hvr.run_dnn),
-        "BC": (load_bc, bc.run_tsetlin, bc.run_dnn),
-        "SONAR": (load_sonar, sonar.run_tsetlin, sonar.run_dnn),
-        "TUANDROMD": (load_tuandromd, tuandromd.run_tsetlin, tuandromd.run_dnn)
-    }
+    experiments = get_experiments()
+
+    # Setup
+    gpu_devices = tensorflow.config.experimental.list_physical_devices('GPU')
+    for device in gpu_devices:
+        tensorflow.config.experimental.set_memory_growth(device, True)
 
     # Config
-    run_for = ["BC"]
-    num_bootstrap = 1
+    run_for = ["MNIST"]
+    n_bootstrap = 130
 
     # Execution
+    started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    run_id = str(uuid.uuid4())
+
+    total = 1. * len(run_for) * n_bootstrap
+    num_runs = 0.
+
     for (dataset_name, experiment) in experiments.items():
         if dataset_name not in run_for:
             continue
 
-        print("Running experiment for dataset: ", dataset_name)
+        print("Running experiment for dataset: {0} with run id: {1}, started at: {2}".format(
+            dataset_name, run_id, started_at))
 
-        (loader, run_tsetlin, run_dnn) = experiment
+        (loader, preprocess_tm, train_tm, preprocess_dnn, train_dnn) = experiment
 
         x, y = loader()
 
-        for i in range(num_bootstrap):
+        with open("boots-{0}-{1}.json".format(started_at, dataset_name), "w") as f:
+            for i in range(n_bootstrap):
+                x_train, y_train, x_test, y_test = ensure_all_classes(x, y)
 
-            x_train, y_train, x_test, y_test = train_test_split(x, y)
+                tms_result = run_experiment(
+                     "tm", dataset_name, x_train, y_train, x_test, y_test, preprocess_tm, train_tm)
 
-            tsetlin_acc, tsetlin_time = run_tsetlin(x_train, y_train, x_test, y_test)
-            log(dataset_name, "tsetlin", tsetlin_acc, tsetlin_time)
+                print(tms_result)
 
-            dnn_acc, dnn_time = run_dnn(x_train, y_train, x_test, y_test)
-            log(dataset_name, "dnn", dnn_acc, dnn_time)
+                dnns_result = run_experiment(
+                    "dnn", dataset_name, x_train, y_train, x_test, y_test, preprocess_dnn, train_dnn)
+
+                print(dnns_result)
+
+                f.write(json.dumps({
+                    "tm": tms_result.__dict__,
+                    "dnn": dnns_result.__dict__,
+                    "run_id": run_id,
+                    "boots_i": i,
+                    "N_boots": n_bootstrap
+                }) + "\n")
+
+                num_runs += 1.
+                print("Progress: ", num_runs/total)
+
+
+if __name__ == "__main__":
+    main()
+
