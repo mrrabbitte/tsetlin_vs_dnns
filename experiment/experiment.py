@@ -89,6 +89,7 @@ def run_experiment(model_name, dataset_name, x_train, y_train, x_test, y_test, p
     else:
         predict = train(x_train, y_train)
     training_took_ms = time_ms() - started_training_at
+
     trainig_took_micro_jules = power.get_power_sum(power_training_at, power.stop_power())
 
     power_predict_at = power.start_power()

@@ -24,6 +24,7 @@ def ensure_all_classes(x, y):
 
     return x_train, y_train, x_test, y_test
 
+
 def main():
     # Specification
     experiments = get_experiments()
@@ -34,8 +35,8 @@ def main():
         tensorflow.config.experimental.set_memory_growth(device, True)
 
     # Config
-    run_for = ["CENSUS"]
-    n_bootstrap = 250
+    run_for = ["MNIST"]
+    n_bootstrap = 130
 
     # Execution
     started_at = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
