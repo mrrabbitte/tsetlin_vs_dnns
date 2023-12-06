@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import json
 
+from scipy import spatial
+
 from training import annealing, census, flags, soybeans, mnist, hvr
 from datasets import datasets as data
 from sklearn.feature_selection import mutual_info_classif
@@ -19,15 +21,15 @@ class DatasetCharacteristic:
                  num_classes,
                  num_instances,
                  num_features,
-                 class_counts,
-                 mutual_info,
+                 class_balance,
+                 mutal_info_median,
                  features_type):
         self.dataset_name = dataset_name
         self.num_classes = num_classes
         self.num_instances = num_instances
         self.num_features = num_features
-        self.class_counts = class_counts
-        self.mutual_info = list(mutual_info)
+        self.class_balance = class_balance
+        self.mutal_info_median = mutal_info_median
         self.features_type = features_type
 
     def __str__(self):
@@ -51,12 +53,16 @@ def characterize(dataset_name,
     mutual_info = mutual_info_classif(X, y)
     class_counts = pd.DataFrame(data=y, index=y).groupby(level=0).count().to_dict()[0]
 
+    counts = list(class_counts.values())
+    N = len(counts)
+    cos_dis = spatial.distance.cosine(counts, np.ones(N) * (1. / N))
+
     return DatasetCharacteristic(dataset_name=dataset_name,
                                  num_classes=num_classes,
                                  num_instances=num_instances,
                                  num_features=num_features,
-                                 mutual_info=mutual_info,
-                                 class_counts=class_counts,
+                                 mutal_info_median=np.median(mutual_info),
+                                 class_balance=cos_dis,
                                  features_type=features_type)
 
 

@@ -5,7 +5,7 @@ import os
 
 import pylab as py
 import numpy as np
-
+import scipy.stats as st
 
 def merge(res, metrics_name, params_name):
     merged = {}
@@ -50,6 +50,39 @@ def get_winners(results_df: pd.DataFrame):
     return winners_per_dataset
 
 
+def compare_variance(tm, dnn):
+    datasets = set(tm.dataset_name.unique())
+
+    assert datasets == set(dnn.dataset_name.unique())
+
+    metrics = ['f1_median', 'training_energy_micro_jules']
+
+    results = []
+
+    for dataset in datasets:
+        tm_ds = tm[tm.dataset_name == dataset]
+        dnn_ds = dnn[dnn.dataset_name == dataset]
+
+        for metric in metrics:
+            tm_samples = tm_ds[metric]
+            dnn_samples = dnn_ds[metric]
+
+            tm_std = np.std(tm_samples)
+            dnn_std = np.std(dnn_samples)
+
+            L, p = st.levene(tm_samples, dnn_samples)
+
+            print("{0}, {1} - tm_std: {2}, dnn_std: {3}, L: {4}, p: {5}, Significant: {6}, Higher: {7}, "
+                  .format(dataset, metric, tm_std, dnn_std, L, p, p < 0.01, tm_std > dnn_std))
+
+            results.append({"dataset_name": dataset,
+                            "metric": metric,
+                            "tm_std": tm_std, "dnn_std": dnn_std,
+                            "std_diff": tm_std - dnn_std,
+                            "L": L, "p": p})
+    return results
+
+
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
 
@@ -71,9 +104,10 @@ if __name__ == "__main__":
     tm = pd.DataFrame.from_records(tm_results)
     dnn = pd.DataFrame.from_records(dnn_results)
 
-    print(get_winners(tm))
-    print(get_winners(dnn))
+    variance_comparison = pd.DataFrame.from_records(compare_variance(tm, dnn))
 
-    plot_results(tm, True)
-    plot_results(dnn)
+    print('\n')
+    print(variance_comparison[variance_comparison.metric == 'f1_median'].to_latex())
+    print(variance_comparison[variance_comparison.metric == 'training_energy_micro_jules'].to_latex())
+
 
